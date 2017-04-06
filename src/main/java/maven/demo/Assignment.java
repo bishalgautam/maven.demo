@@ -23,17 +23,19 @@ public class Assignment{
 	private HashSet<BigDecimal> uniqueCust;
 	//private HashMap<BigDecimal, >
 	private List<BigDecimal> totalPrice;
+	private BigDecimal[] countTotal;
 	
 	public Assignment(){
 			 client = new OkHttpClient();
 			 gson = new Gson();
 			 uniqueCust = new HashSet<BigDecimal>();
 			 totalPrice = new ArrayList<BigDecimal>();
+			 countTotal = new BigDecimal[1];
 		}
 		
 	 
 	 static class OrderContainer{
-		   public List<Order> orders;;
+		   private List<Order> orders;;
 		}
 	 
 	 static class Order{
@@ -52,7 +54,42 @@ public class Assignment{
 		 private BigDecimal id;
 		 
 	 }
-    public void run() throws Exception {
+	 
+	 static class TotalOrders{
+		 private BigDecimal count;
+	 } 
+public void getTotalCount() throws Exception{
+	 
+	 		Request request = new Request.Builder()
+	 		  .url("https://100pure-demo.myshopify.com/admin/orders/count.json?status=any")
+	 		  .get()
+	 		  .addHeader("x-shopify-access-token", "b1ade8379e97603f3b0d92846e238ad8")
+	 		  .addHeader("cache-control", "no-cache")
+	 		  .addHeader("postman-token", "ef9e23f3-3808-8f7e-f5d9-a2248461908a")
+	 		  .build();
+	 		
+	// 		private	final OkHttpClient client = new OkHttpClient();		
+	 		client.newCall(request).enqueue(new Callback() {
+	 		      
+	 			 public void onFailure(Call call, IOException e) {
+	 		        e.printStackTrace();
+	 		        throw new RuntimeException(e);
+	 		      }
+	 
+	 		      public void onResponse(Call call, Response response) throws IOException {
+	 		        if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+	 		        
+	 		        TotalOrders gist = gson.fromJson(response.body().charStream(), TotalOrders.class);
+	 		        countTotal[0] = gist.count;
+	 		        System.out.println(countTotal[0]);
+	 		       response.close(); 
+			      }
+			      
+			      
+			      });
+}
+	 
+ public void run() throws Exception {
  
     	Request request = new Request.Builder()
     			  .url("https://100pure-demo.myshopify.com/admin/orders.json?status=any&fields=id,line_items,customer,total_price,created_at")
@@ -71,28 +108,36 @@ public class Assignment{
 
 		      public void onResponse(Call call, Response response) throws IOException {
 		        if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+		        
+//		        Headers responseHeaders = response.headers();
+//		        for (int i = 0; i < responseHeaders.size(); i++) {
+//		          System.out.println(responseHeaders.name(i) + ": " + responseHeaders.value(i));
+//		        }
 
 		        OrderContainer gist = gson.fromJson(response.body().charStream(), OrderContainer.class);
 		        
-		        for (Order entry : gist.orders){
-			          System.out.println(entry.id);
-			          System.out.println(entry.total_price);
-			          List<LineItem> list = entry.line_items;
-			          for(LineItem li : list)
-			        	  System.out.println(li.product_id);
-			          CustomerId custId = entry.customer;
-			          System.out.println(custId.id);
-			      }
+//		        for (Order entry : gist.orders){
+//			          System.out.println(entry.id);
+//			          System.out.println(entry.total_price);
+//			          List<LineItem> list = entry.line_items;
+//			          for(LineItem li : list)
+//			        	  System.out.println(li.product_id);
+//			          CustomerId custId = entry.customer;
+//			          System.out.println(custId.id);
+//			      }
+		        response.close(); 
 		      }
+		      
+		      
 		      });
 		  
-		    
-		  }	    
-
-	public static void main(String[] args) throws Exception {
+		  }		      
+public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		 Assignment ass = new Assignment();
-		 ass.run();
+		 ass.getTotalCount();
+		// System.out.println(ass.countTotal[0]);
+		 //ass.run();
 		 	
 	}
 
