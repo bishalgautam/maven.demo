@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -16,30 +18,19 @@ import okhttp3.*;
 
 public class Assignment{
 	
-	public	final OkHttpClient client;
+	private	final OkHttpClient client;
 	private final Gson gson;
-//	final Gist gist;
+	private HashSet<BigDecimal> uniqueCust;
+	//private HashMap<BigDecimal, >
+	private List<BigDecimal> totalPrice;
 	
 	public Assignment(){
 			 client = new OkHttpClient();
 			 gson = new Gson();
-//			 gist = new Gist();
+			 uniqueCust = new HashSet<BigDecimal>();
+			 totalPrice = new ArrayList<BigDecimal>();
 		}
 		
-	
-	static class GitUser {
-	    String name;
-	    String url;
-	    int id;
-	}
-	
-	static class Gist {
-	    Map<String, GistFile> files;
-	  }
-
-	 static class GistFile {
-	    String content;
-	  }
 	 
 	 static class OrderContainer{
 		   public List<Order> orders;;
@@ -62,13 +53,9 @@ public class Assignment{
 		 
 	 }
     public void run() throws Exception {
-        
-    	
-//        Request request = new Request.Builder()
-//    	        .url("https://api.github.com/gists/c2a7c39532239ff261be")
-//    	        .build();
+ 
     	Request request = new Request.Builder()
-    			  .url("https://100pure-demo.myshopify.com/admin/orders.json?status=any")
+    			  .url("https://100pure-demo.myshopify.com/admin/orders.json?status=any&fields=id,line_items,customer,total_price,created_at")
     			  .get()
     			  .addHeader("x-shopify-access-token", "b1ade8379e97603f3b0d92846e238ad8")
     			  .addHeader("cache-control", "no-cache")
@@ -76,7 +63,8 @@ public class Assignment{
     			  .build();
 
 		 client.newCall(request).enqueue(new Callback() {
-		      public void onFailure(Call call, IOException e) {
+		      
+			 public void onFailure(Call call, IOException e) {
 		        e.printStackTrace();
 		        throw new RuntimeException(e);
 		      }
@@ -84,18 +72,16 @@ public class Assignment{
 		      public void onResponse(Call call, Response response) throws IOException {
 		        if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 
-//		        Headers responseHeaders = response.headers();
-//		        for (int i = 0, size = responseHeaders.size(); i < size; i++) {
-//		          System.out.println(responseHeaders.name(i) + ": " + responseHeaders.value(i));
-//		        }
-
-		       // System.out.println(response.body().string());
 		        OrderContainer gist = gson.fromJson(response.body().charStream(), OrderContainer.class);
 		        
 		        for (Order entry : gist.orders){
 			          System.out.println(entry.id);
 			          System.out.println(entry.total_price);
-			         // System.out.println(entry.getValue().content);
+			          List<LineItem> list = entry.line_items;
+			          for(LineItem li : list)
+			        	  System.out.println(li.product_id);
+			          CustomerId custId = entry.customer;
+			          System.out.println(custId.id);
 			      }
 		      }
 		      });
