@@ -24,13 +24,16 @@ public class Assignment{
 	//private HashMap<BigDecimal, >
 	private List<BigDecimal> totalPrice;
 	private BigDecimal[] countTotal;
-	
+	private boolean loop;
+	private int page;
 	public Assignment(){
 			 client = new OkHttpClient();
 			 gson = new Gson();
 			 uniqueCust = new HashSet<BigDecimal>();
 			 totalPrice = new ArrayList<BigDecimal>();
 			 countTotal = new BigDecimal[1];
+			 loop = true;
+			 page = 1;
 		}
 		
 	 
@@ -59,40 +62,42 @@ public class Assignment{
 		 private BigDecimal count;
 	 } 
 public void getTotalCount() throws Exception{
-	 
-	 		Request request = new Request.Builder()
-	 		  .url("https://100pure-demo.myshopify.com/admin/orders/count.json?status=any")
-	 		  .get()
-	 		  .addHeader("x-shopify-access-token", "b1ade8379e97603f3b0d92846e238ad8")
-	 		  .addHeader("cache-control", "no-cache")
-	 		  .addHeader("postman-token", "ef9e23f3-3808-8f7e-f5d9-a2248461908a")
-	 		  .build();
+	
+	while(loop){
+	Request request = new Request.Builder()
+			  .url("https://100pure-demo.myshopify.com/admin/orders.json?status=any&page="+page+"&fields=id,line_items,customer,total_price,created_at")
+			  .get()
+			  .addHeader("x-shopify-access-token", "b1ade8379e97603f3b0d92846e238ad8")
+			  .addHeader("cache-control", "no-cache")
+			  .addHeader("postman-token", "aa55cf3c-9688-b70d-0569-d69c77873ff2")
+			  .build();
 	 		
 	// 		private	final OkHttpClient client = new OkHttpClient();		
-	 		client.newCall(request).enqueue(new Callback() {
-	 		      
-	 			 public void onFailure(Call call, IOException e) {
-	 		        e.printStackTrace();
-	 		        throw new RuntimeException(e);
-	 		      }
-	 
-	 		      public void onResponse(Call call, Response response) throws IOException {
-	 		        if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-	 		        
-	 		        TotalOrders gist = gson.fromJson(response.body().charStream(), TotalOrders.class);
-	 		        countTotal[0] = gist.count;
-	 		        System.out.println(countTotal[0]);
-	 		       response.close(); 
-			      }
-			      
-			      
-			      });
+	 		Response response = client.newCall(request).execute();
+	 		
+	 		if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+	 		
+	 		OrderContainer gist = gson.fromJson(response.body().charStream(), OrderContainer.class);
+	        
+	        if( gist.orders == null || gist.orders.size() == 0){
+	        	loop = false; 
+	        	return;
+	        }else{
+	        	page++;
+	        	System.out.println("else process.");
+	        	
+	        }
+	        
+	        response.close();
+	}			
+
 }
 	 
  public void run() throws Exception {
  
+	 while(loop){
     	Request request = new Request.Builder()
-    			  .url("https://100pure-demo.myshopify.com/admin/orders.json?status=any&fields=id,line_items,customer,total_price,created_at")
+    			  .url("https://100pure-demo.myshopify.com/admin/orders.json?status=any&page="+page+"&fields=id,line_items,customer,total_price,created_at")
     			  .get()
     			  .addHeader("x-shopify-access-token", "b1ade8379e97603f3b0d92846e238ad8")
     			  .addHeader("cache-control", "no-cache")
@@ -116,6 +121,16 @@ public void getTotalCount() throws Exception{
 
 		        OrderContainer gist = gson.fromJson(response.body().charStream(), OrderContainer.class);
 		        
+		        if( gist.orders.size() == 0){
+		        	loop = false; 
+		        	return;
+		        }else{
+		        	page++;
+		        	System.out.println("else process.");
+		        	
+		        }
+		        	
+		        
 //		        for (Order entry : gist.orders){
 //			          System.out.println(entry.id);
 //			          System.out.println(entry.total_price);
@@ -130,14 +145,19 @@ public void getTotalCount() throws Exception{
 		      
 		      
 		      });
-		  
-		  }		      
+	 }
+ }		      
 public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		 Assignment ass = new Assignment();
-		 ass.getTotalCount();
+		 //ass.getTotalCount();
 		// System.out.println(ass.countTotal[0]);
-		 //ass.run();
+		 
+		//while(ass.loop){
+			ass.getTotalCount(); 
+		//	System.out.println("looping");
+		// }
+		    //ass.run();
 		 	
 	}
 
