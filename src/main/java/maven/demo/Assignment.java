@@ -33,7 +33,7 @@ public class Assignment{
 	
 	private long totalOrder;
 	private int maxOrder;
-	private int minOrder;
+	private LineItem minOrder = null;;
 	
 	public Assignment(){
 			 client = new OkHttpClient();
@@ -47,7 +47,7 @@ public class Assignment{
 			 
 			 totalOrder = 0;
 			 maxOrder = Integer.MIN_VALUE;
-			 minOrder = Integer.MAX_VALUE;
+			 minOrder = null;
 		}
 		
 	 static class OrderContainer{
@@ -96,9 +96,11 @@ public class Assignment{
 		 		OrderContainer gist = gson.fromJson(response.body().charStream(), OrderContainer.class);
 		        
 		        if( gist.orders == null || gist.orders.size() == 0){
-		        	loop = false; 
+		        	loop = false;
+		        	System.out.println("End of the Pages to Process");
 		        	return;
 		        }else{
+		        	System.out.println("Processing  Page "+ page);
 		        	page++;
 		        	for (Order entry : gist.orders){
 		        			/* count of orders*/
@@ -126,15 +128,15 @@ public class Assignment{
 		        		  
 		        	     /* */
 				          List<LineItem> list = entry.line_items;
-				          for(LineItem li : list){
-						   
+				          for(LineItem li : list){				        	
 						          if(productMap.containsKey(li.product_id)){
 						        	  productMap.put(li.product_id, productMap.get(li.product_id)+1);
-						        	  maxOrder = Math.max(maxOrder, productMap.get(li.product_id));
-						        	 
+						        	  maxOrder = Math.max(maxOrder, productMap.get(li.product_id));				
+						        	  if(minOrder == null || productMap.get(minOrder.product_id) > productMap.get(li.product_id)){
+						        		  minOrder = li;
+						        	  }
 						          }else{
 						        	  productMap.put(li.product_id,1);
-						        	  minOrder = Math.min(minOrder, maxOrder);
 						          }
 				          }
 				             
@@ -150,7 +152,6 @@ public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 	 final List<BigDecimal> mostOrdered = new ArrayList<BigDecimal>();
 	 final List<BigDecimal> leastOrdered = new ArrayList<BigDecimal>();
-	 //final HashMap<BigDecimal, Long> uniqueCust = new HashMap<BigDecimal, Long>();
 	 
 		 Assignment ass = new Assignment();
 		 ass.getTotalOrders();
@@ -162,11 +163,14 @@ public static void main(String[] args) throws Exception {
 		 int index = (int) Math.ceil((ass.totalPrices.size()+0.00)/2);
 		 System.out.println("Median Order Value: " + ass.totalPrices.get(index));
 		 
+		 int max = (ass.maxOrder == Integer.MIN_VALUE ) ? 1 : ass.maxOrder;
+       	 int min = (ass.minOrder == null) ? 1 : ass.productMap.get(ass.minOrder.product_id);
+       			 
 		 for(Map.Entry<BigDecimal, Integer> en : ass.productMap.entrySet()){
-       	
-       	  		  if(en.getValue() == ass.maxOrder){
+       	 
+       	  		  if(en.getValue() == max){
 	        		  mostOrdered.add(en.getKey());
-	        	  }else if(en.getValue() == ass.minOrder){
+	        	  }else if(en.getValue() == min){
 	        		  leastOrdered.add(en.getKey());
 	        	  }
        	  
