@@ -8,7 +8,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +32,9 @@ public class Assignment{
 	private int page;
 	
 	private long totalOrder;
-	private int maxOrder;
-	private LineItem minOrder;
-	
+//	private int maxOrder;
+//	private LineItem minOrder;
+//	
 	public Assignment(){
 			 client = new OkHttpClient();
 			 gson = new Gson();
@@ -47,8 +46,8 @@ public class Assignment{
 			 page = 1;
 			 
 			 totalOrder = 0;
-			 maxOrder = Integer.MIN_VALUE;
-			 minOrder = null;
+//			 maxOrder = Integer.MIN_VALUE;
+//			 minOrder = null;
 		}
 		
 	 static class OrderContainer{
@@ -137,11 +136,11 @@ public class Assignment{
 				          List<LineItem> list = entry.line_items;
 				          for(LineItem li : list){				        	
 						          if(productMap.containsKey(li.product_id)){
-							          if(minOrder == null || productMap.get(minOrder.product_id).compareTo(productMap.get(li.product_id)) > 0){
-						        		  minOrder = li;
-						        	  }      
+//							          if(minOrder == null || productMap.get(minOrder.product_id).compareTo(productMap.get(li.product_id)) > 0){
+//						        		  minOrder = li;
+//						        	  }      
 						        	  productMap.put(li.product_id, productMap.get(li.product_id)+1);
-						        	  maxOrder = Math.max(maxOrder, productMap.get(li.product_id));				
+						        	 // maxOrder = Math.max(maxOrder, productMap.get(li.product_id));				
 						        	  
 						          }else{
 						        	  productMap.put(li.product_id,1);
@@ -166,15 +165,15 @@ public static void main(String[] args) throws Exception {
 		 System.out.println("Total No. of Orders : " + ass.totalOrder);
 		 System.out.println("No of Unique Customers: "+ ass.timeMap.size());
 		 
-		 Collections.sort(ass.totalPrices);
-		 //int index = (int) Math.ceil((ass.totalPrices.size()+0.00)/2);
-		 int index = (ass.totalPrices.size()+ 1)/2;
-		 System.out.println("Median Order Value: " + ass.totalPrices.get(index));
+		  Collections.sort(ass.totalPrices);
+		  int index = ass.totalPrices.size()/2 ;
+		  System.out.println("Median Order Value: " + ass.totalPrices.get(index));
 		 
-		 int max = (ass.maxOrder == Integer.MIN_VALUE ) ? 1 : ass.maxOrder;
-       	 int min = (ass.minOrder == null) ? 1 : ass.productMap.get(ass.minOrder.product_id);
-       	 //int min =  Collections.min(ass.productMap.values());
-       	 System.out.println(max + "max and min " + min);
+//		 int max = (ass.maxOrder == Integer.MIN_VALUE ) ? 1 : ass.maxOrder;
+//       int min = (ass.minOrder == null) ? 1 : ass.productMap.get(ass.minOrder.product_id);
+		 
+		 int max = Collections.max(ass.productMap.values());
+		 int min = Collections.min(ass.productMap.values());
 		 
        	 for(Map.Entry<BigDecimal, Integer> en : ass.productMap.entrySet()){
        	 
