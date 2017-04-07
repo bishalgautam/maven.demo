@@ -106,7 +106,7 @@ public class Assignment{
 		        			/* count of orders*/
 		        			totalOrder++;
 				         
-		        			/* */
+		        			/* creating a hashmap with customerId as key and list of ordered_time as values*/
 		        			CustomerId custId = entry.customer;
 					        BigDecimal id = custId.id ;
 					        long millisSinceEpoch = getMillisecond(entry.created_at);
@@ -126,7 +126,7 @@ public class Assignment{
 		        		  BigDecimal bd = new BigDecimal(totalPrice);
 		        		  totalPrices.add(bd);
 		        		  
-		        	     /* */
+		        	     /*creating a hashmap and tracking the max and min values in the hashmap */
 				          List<LineItem> list = entry.line_items;
 				          for(LineItem li : list){				        	
 						          if(productMap.containsKey(li.product_id)){
@@ -144,7 +144,6 @@ public class Assignment{
 		        }
 		        response.close();
 		}			
-	
 	}
 	 
   
@@ -160,7 +159,8 @@ public static void main(String[] args) throws Exception {
 		 System.out.println("No of Unique Customers: "+ ass.timeMap.size());
 		 
 		 Collections.sort(ass.totalPrices);
-		 int index = (int) Math.ceil((ass.totalPrices.size()+0.00)/2);
+		 //int index = (int) Math.ceil((ass.totalPrices.size()+0.00)/2);
+		 int index = (ass.totalPrices.size()+ 1)/2;
 		 System.out.println("Median Order Value: " + ass.totalPrices.get(index));
 		 
 		 int max = (ass.maxOrder == Integer.MIN_VALUE ) ? 1 : ass.maxOrder;
@@ -186,17 +186,15 @@ public static void main(String[] args) throws Exception {
 		       	  Collections.sort(list);
 		       	  long interval = 0;
 		       	  long minInterval = Long.MAX_VALUE;
+		       	  /*Finding the shortest interval among the times in the sorted list*/
 		       	  for(long inter : list){
 		       		  if (Math.abs(inter - interval) < minInterval){
 		       			  minInterval = Math.abs(inter - interval);
 		       		  } 
-		       		
 		       		  interval = inter;
 		       	  }
-		       	    System.out.println("Customer Id :"+ en.getKey()+ ", Shortest Interval :"+ minInterval);
-         }   
-		 
-		 
+		       	    System.out.println("[Customer Id :"+ en.getKey()+ ", Shortest Interval :"+ minInterval+"]");
+         }    
 	}
 
  }
