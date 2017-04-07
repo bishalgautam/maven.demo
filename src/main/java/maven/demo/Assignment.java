@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.google.gson.Gson;
 import okhttp3.*;
@@ -20,10 +20,9 @@ public class Assignment{
 	
 	private	final OkHttpClient client;
 	private final Gson gson;
-	/*HashSet for Number of unique customers*/
-	private HashSet<BigDecimal> uniqueCust;
+	
 	/*HashMap to calculate the Shortest interval between any two consecutive orders placed by the same customer*/
-	private HashMap<BigDecimal,Long> timeMap;
+	private HashMap<BigDecimal,List<Long>> timeMap;
 	/*List to calculate Median order value*/
 	private List<BigDecimal> totalPrices;
 	/*HashMap to calculate Most and least frequently ordered items*/
@@ -33,43 +32,29 @@ public class Assignment{
 	private int page;
 	
 	private long totalOrder;
-	private long minInterval;
-	
 	private int maxOrder;
-	private List<BigDecimal> mostOrdered;
-	private List<BigDecimal> leastOrdered;
+	private int minOrder;
 	
 	public Assignment(){
 			 client = new OkHttpClient();
 			 gson = new Gson();
-			 uniqueCust = new HashSet<BigDecimal>();
+			// uniqueCust = new HashMap<BigDecimal, Long>();
 			 totalPrices = new ArrayList<BigDecimal>();
-			 timeMap = new HashMap<BigDecimal, Long>();
+			 timeMap = new HashMap<BigDecimal,List<Long>>();
 			 productMap = new HashMap<BigDecimal,Integer>();
 			 loop = true;
 			 page = 1;
 			 
 			 totalOrder = 0;
-			 minInterval = Long.MAX_VALUE;
 			 maxOrder = Integer.MIN_VALUE;
-			 mostOrdered = new ArrayList<BigDecimal>();
-			 leastOrdered = new ArrayList<BigDecimal>();
+			 minOrder = Integer.MAX_VALUE;
 		}
 		
-//	static class Pair{
-//		 Instant date;
-//		 long milliSecTime;
-//		 public Pair(Instant date, long milli){
-//			 this.date = date;
-//			 this.milliSecTime = milli;
-//		 }
-//	 }
 	 static class OrderContainer{
 		   private List<Order> orders;;
 		}
 	 
 	 static class Order{
-//		private BigDecimal id;
 		private String created_at;			
 		private String total_price;
 		private List<LineItem> line_items;
@@ -84,10 +69,6 @@ public class Assignment{
 		 private BigDecimal id;
 		 
 	 }
-	 
-	 static class TotalOrders{
-		 private BigDecimal count;
-	 } 
 	 
 	public long getMillisecond(String date){
 		
@@ -120,22 +101,24 @@ public class Assignment{
 		        }else{
 		        	page++;
 		        	for (Order entry : gist.orders){
-				       
+		        			/* count of orders*/
 		        			totalOrder++;
 				         
+		        			/* */
 		        			CustomerId custId = entry.customer;
 					        BigDecimal id = custId.id ;
 					        long millisSinceEpoch = getMillisecond(entry.created_at);
 					        if(timeMap.containsKey(id)){
-					        	
-					        	long timeSinceEpoch = timeMap.get(id);
-					        	long interval = Math.abs(millisSinceEpoch - timeSinceEpoch);
-					        	minInterval = (interval < minInterval) ? interval : minInterval;
-					        	
+					        	List<Long> temp = timeMap.get(id);
+					        	temp.add(millisSinceEpoch);
+					        	timeMap.put(id, temp);
 					        }else{
-					        	timeMap.put(id,	millisSinceEpoch);
+					        	List<Long> list = new ArrayList<Long>();
+					        	list.add(millisSinceEpoch);
+					        	timeMap.put(id,	list);
 					        }
 					        
+					      
 		        		 /* Creating a list of values*/
 		        		  String totalPrice = entry.total_price.replaceAll(",","");
 		        		  BigDecimal bd = new BigDecimal(totalPrice);
@@ -148,23 +131,13 @@ public class Assignment{
 						          if(productMap.containsKey(li.product_id)){
 						        	  productMap.put(li.product_id, productMap.get(li.product_id)+1);
 						        	  maxOrder = Math.max(maxOrder, productMap.get(li.product_id));
+						        	 
 						          }else{
 						        	  productMap.put(li.product_id,1);
+						        	  minOrder = Math.min(minOrder, maxOrder);
 						          }
 				          }
-				          
-				          for(Map.Entry<BigDecimal, Integer> en : productMap.entrySet()){
-					        	  
-				        	  if(en.getValue() == maxOrder){
-					        		  mostOrdered.add(en.getKey());
-					        	  }else if(en.getValue() == 1){
-					        		  leastOrdered.add(en.getKey());
-					        	  }
-				        	  
-				          }
-				          
-				          
-				          	  
+				             
 				      }
 		        }
 		        response.close();
@@ -175,6 +148,10 @@ public class Assignment{
   
 public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
+	 final List<BigDecimal> mostOrdered = new ArrayList<BigDecimal>();
+	 final List<BigDecimal> leastOrdered = new ArrayList<BigDecimal>();
+	 //final HashMap<BigDecimal, Long> uniqueCust = new HashMap<BigDecimal, Long>();
+	 
 		 Assignment ass = new Assignment();
 		 ass.getTotalOrders();
 		 
@@ -185,8 +162,37 @@ public static void main(String[] args) throws Exception {
 		 int index = (int) Math.ceil((ass.totalPrices.size()+0.00)/2);
 		 System.out.println("Median Order Value: " + ass.totalPrices.get(index));
 		 
-		 System.out.println(  "Least Ordered Items ProductId :"+ Arrays.toString(ass.leastOrdered.toArray()));
-		 System.out.println(  "Most Ordered Items ProductId  :"+ Arrays.toString(ass.mostOrdered.toArray()));
+		 for(Map.Entry<BigDecimal, Integer> en : ass.productMap.entrySet()){
+       	
+       	  		  if(en.getValue() == ass.maxOrder){
+	        		  mostOrdered.add(en.getKey());
+	        	  }else if(en.getValue() == ass.minOrder){
+	        		  leastOrdered.add(en.getKey());
+	        	  }
+       	  
+         }   
+         	  
+		 System.out.println(  "Least Ordered Items ProductId :"+ Arrays.toString(leastOrdered.toArray()));
+		 System.out.println(  "Most Ordered Items ProductId  :"+ Arrays.toString(mostOrdered.toArray()));
+		 
+		 System.out.println("Customers and the shortest interval between their consecutive orders :");
+		 
+		 for(Entry<BigDecimal, List<Long>> en : ass.timeMap.entrySet()){
+		       	  List<Long> list = en.getValue();
+		       	  Collections.sort(list);
+		       	  long interval = 0;
+		       	  long minInterval = Long.MAX_VALUE;
+		       	  for(long inter : list){
+		       		  if (Math.abs(inter - interval) < minInterval){
+		       			  minInterval = Math.abs(inter - interval);
+		       		  } 
+		       		
+		       		  interval = inter;
+		       	  }
+		       	    System.out.println("Customer Id :"+ en.getKey()+ ", Shortest Interval :"+ minInterval);
+         }   
+		 
+		 
 	}
 
  }
