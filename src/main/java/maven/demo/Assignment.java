@@ -198,12 +198,16 @@ public static void main(String[] args) throws Exception {
 		       	  
 		       	  /*Finding the shortest interval among the times in the sorted list*/
 		       	  for(long inter : list){
-		       		  if (Math.abs(inter - interval) < minInterval){
-		       			  minInterval = Math.abs(inter - interval);
+		       		  if ((inter - interval) < minInterval){
+		       			  minInterval = inter - interval;
 		       		  } 
 		       		  interval = inter;
 		       	  }
-		       	    System.out.println("[Customer Id :"+ en.getKey()+ ", Shortest Interval :"+ minInterval+"]");
+		       	  if(list.size() < 1){
+		       		 System.out.println("[Customer Id :"+ en.getKey()+ ", Shortest Interval : NUll ]"); 
+		       	  }else{
+		       		 System.out.println("[Customer Id :"+ en.getKey()+ ", Shortest Interval :"+ minInterval+"]");  
+		       	  }	 
          }    
 	}
 
